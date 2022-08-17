@@ -1,0 +1,5 @@
+100 - 199 / 1xx (information Purpose)
+200 - 299 / 2xx (success)
+300 - 399 / 3xx (redirect)
+400 - 499 / 4xx (To show error)
+500 - 599 / 5xx (Server Error. ex - site crash etc)
