@@ -1,7 +1,8 @@
 const userModal = require("../model/userModal")
 var jwt = require("jsonwebtoken")
 const secretKey = "chrollo"
-const cookieParser = require("cookie-parser");
+const mailSender = require("../utilities/mailSender")
+
 
 async function loginController(req, res) {
     try {
@@ -39,14 +40,24 @@ function otpGenerator() {
 async function forgetPasswordController(req, res) {
     try {
         let { email } = req.body;
-        let afterFiveMin = Date.now() + 1000 * 60 * 5;
-        let otp = otpGenerator();
-        let user = await userModal.findOneAndUpdate({ email: email }, { otp: otp, otpExpiry: afterFiveMin }, { new: true })
-        console.log(user)
-        res.json({
-            data: user,
-            message: "otp sent to your mail"
-        });
+        let user = await userModal.findOne({ email })
+        if (user) {
+            let afterFiveMin = Date.now() + 1000 * 60 * 5;
+            let otp = otpGenerator();
+            await mailSender(email, otp)
+            user.otp = otp;
+            user.otpExpiry = afterFiveMin
+            await user.save();
+            res.json({
+                data: user,
+                "message": "otp send to your mail"
+            })
+        } else {
+            res.json({
+                result: "user with this email does not exist"
+            })
+        }
+        // new = true -> will get update doc
     } catch (err) {
         res.send(err.message)
     }
@@ -129,9 +140,9 @@ function protectRoute(req, res, next) {
 
 
 module.exports = {
-    resetPasswordController ,
-    loginController ,
-    forgetPasswordController ,
-    signUpController ,
+    resetPasswordController,
+    loginController,
+    forgetPasswordController,
+    signUpController,
     protectRoute
 }
